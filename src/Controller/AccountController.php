@@ -34,7 +34,7 @@ class AccountController extends AbstractController
         if (!$Accounts) {
             $response = $this->accounts->request(
                 'GET',
-                'https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/'.$username,
+                'https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/' . $username,
                 [
                     'headers' => [
                         'Accept' => 'application/json',
@@ -51,7 +51,7 @@ class AccountController extends AbstractController
         }
 
         $Accounts = $serializer->serialize($Accounts, 'json');
-        $Accounts =json_decode($Accounts,true);
+        $Accounts = json_decode($Accounts, true);
         return $this->json($Accounts);
     }
 }

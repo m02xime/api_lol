@@ -8,6 +8,9 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\GetSetMethodNormalizer;
 
 #[Route('/api', name: 'api')]
 class ItemsController extends AbstractController
@@ -18,7 +21,7 @@ class ItemsController extends AbstractController
     {
         $this->items = $items;
     }
-    #[Route('/items', name: 'app_items')]
+    #[Route('/BDDitems', name: 'app_BDDitems')]
     public function index(ManagerRegistry $doctrine): JsonResponse
     {
 
@@ -29,7 +32,7 @@ class ItemsController extends AbstractController
         );
 
         $content = $response->toarray()['data'];
-        $itemnbr=0;
+        $itemnbr = 0;
         foreach ($content as $key => $item) {
 
             $items = $entityManager->getRepository(items::class)->findBy(array('itemID' => $key));
@@ -57,6 +60,20 @@ class ItemsController extends AbstractController
 
 
 
-        return $this->json(["message"=>"items mis en base : ".$itemnbr]);
+        return $this->json(["message" => "items mis en base : " . $itemnbr]);
+    }
+
+    //get all items from database
+    #[Route('/items', name: 'app_items')]
+    public function getItems(ManagerRegistry $doctrine): JsonResponse
+    {
+        $encoders = array(new JsonEncoder());
+        $normalizers = array(new GetSetMethodNormalizer());
+        $serializer = new Serializer($normalizers, $encoders);
+        $entityManager = $doctrine->getManager();
+        $items = $entityManager->getRepository(items::class)->findAll();
+        $items = $serializer->serialize($items, 'json');
+        $items = json_decode($items, true);
+        return $this->json($items);
     }
 }

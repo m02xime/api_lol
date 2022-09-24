@@ -8,6 +8,9 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\GetSetMethodNormalizer;
 
 #[Route('/api', name: 'api')]
 class ChampionController extends AbstractController
@@ -17,7 +20,7 @@ class ChampionController extends AbstractController
     {
         $this->champions = $champions;
     }
-    #[Route('/champions', name: 'app_champion')]
+    #[Route('/BDDchampions', name: 'app_champion')]
     public function index(ManagerRegistry $doctrine): JsonResponse
     {
 
@@ -29,7 +32,7 @@ class ChampionController extends AbstractController
 
         $content = $response->toarray()['data'];
         $championnbr = 0;
-        foreach ($content as $key => $champion) {
+        foreach ($content as $champion) {
             $champions = $entityManager->getRepository(champions::class)->findBy(array('idName' => $champion['id']));
             if (!$champions) {
 
@@ -57,5 +60,20 @@ class ChampionController extends AbstractController
 
 
         return $this->json(["message" => "champions mis en base : " . $championnbr]);
+    }
+
+    //get all champion from database
+    #[Route('/champions', name: 'app_champions')]
+    public function getChampions(ManagerRegistry $doctrine): JsonResponse
+    {
+        $encoders = array(new JsonEncoder());
+        $normalizers = array(new GetSetMethodNormalizer());
+        $serializer = new Serializer($normalizers, $encoders);
+        $entityManager = $doctrine->getManager();
+        $entityManager = $doctrine->getManager();
+        $champions = $entityManager->getRepository(champions::class)->findAll();
+        $champions = $serializer->serialize($champions, 'json');
+        $champions = json_decode($champions, true);
+        return $this->json($champions);
     }
 }
