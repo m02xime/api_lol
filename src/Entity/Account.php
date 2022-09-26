@@ -31,6 +31,9 @@ class Account
     #[ORM\Column]
     private ?int $summonerLevel = null;
 
+    #[ORM\Column(length: 255)]
+    private ?string $region = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -104,6 +107,18 @@ class Account
     public function setSummonerLevel(int $summonerLevel): self
     {
         $this->summonerLevel = $summonerLevel;
+
+        return $this;
+    }
+
+    public function getRegion(): ?string
+    {
+        return $this->region;
+    }
+
+    public function setRegion(string $region): self
+    {
+        $this->region = $region;
 
         return $this;
     }

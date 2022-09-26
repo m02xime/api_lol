@@ -23,18 +23,18 @@ class AccountController extends AbstractController
         $this->accounts = $accounts;
     }
 
-    #[Route('/account/{username}', name: 'app_account')]
-    public function index(ManagerRegistry $doctrine, string $username): JsonResponse
+    #[Route('/account/{username}/region/{region}', name: 'app_account')]
+    public function index(ManagerRegistry $doctrine, string $username, string $region): JsonResponse
     {
         $encoders = array(new JsonEncoder());
         $normalizers = array(new GetSetMethodNormalizer());
         $serializer = new Serializer($normalizers, $encoders);
         $entityManager = $doctrine->getManager();
-        $Accounts = $entityManager->getRepository(Account::class)->findBy(array('name' => $username));
+        $Accounts = $entityManager->getRepository(Account::class)->findBy(array('name' => $username,'region'=>$region));
         if (!$Accounts) {
             $response = $this->accounts->request(
                 'GET',
-                'https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/' . $username,
+                'https://'.$region.'.api.riotgames.com/lol/summoner/v4/summoners/by-name/' . $username,
                 [
                     'headers' => [
                         'Accept' => 'application/json',
@@ -45,6 +45,7 @@ class AccountController extends AbstractController
             $content = $response->getContent();
             $Accounts = new Account();
             $Accounts = $serializer->deserialize($content, 'App\Entity\Account', 'json');
+            $Accounts->setRegion($region);
             $entityManager->persist($Accounts);
             $entityManager->flush();
             $Accounts = [$Accounts];
