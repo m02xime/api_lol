@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Matchs;
+use App\Entity\MatchTimeline;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -74,6 +75,7 @@ class MatchController extends AbstractController
                     $Matchs->setTurretLost($partipant['turretsLost']);
                     $Matchs->setVisionWardsBoughtInGame($partipant['visionWardsBoughtInGame']);
                     $Matchs->setIdMatch($content['metadata']['matchId']);
+                    $Matchs->setGameMode($content['info']['gameMode']);
                     $entityManager->persist($Matchs);
                     $entityManager->flush();
                     $Matchs = [$Matchs];
@@ -94,7 +96,7 @@ class MatchController extends AbstractController
         $serializer = new Serializer($normalizers, $encoders);
         $entityManager = $doctrine->getManager();
         $Matchs = $entityManager->getRepository(Matchs::class)->findBy(array('puuid' => $puuid), array('id' => 'ASC'), 20);
-        if (!$Matchs || count($Matchs)!=20) {
+        if (!$Matchs || count($Matchs) != 20) {
             $response = $this->Matchs->request(
                 'GET',
                 'https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/' . $puuid . '/ids',
@@ -151,6 +153,7 @@ class MatchController extends AbstractController
                         $Matchs->setTurretLost($partipant['turretsLost']);
                         $Matchs->setVisionWardsBoughtInGame($partipant['visionWardsBoughtInGame']);
                         $Matchs->setIdMatch($content['metadata']['matchId']);
+                        $Matchs->setGameMode($content['info']['gameMode']);
                         $entityManager->persist($Matchs);
                         $entityManager->flush();
                         $Matchs = $serializer->serialize($Matchs, 'json');
@@ -164,5 +167,37 @@ class MatchController extends AbstractController
         $Matchs = $serializer->serialize($Matchs, 'json');
         $Matchs = json_decode($Matchs, true);
         return $this->json($Matchs);
+    }
+
+    //route recuperer un match timeline par matchId
+    #[Route('/match/timeline/{matchId}', name: 'app_matchs_timeline')]
+    public function matchTimeline(ManagerRegistry $doctrine, string $matchId): JsonResponse
+    {
+        $encoders = array(new JsonEncoder());
+        $normalizers = array(new GetSetMethodNormalizer());
+        $serializer = new Serializer($normalizers, $encoders);
+        $entityManager = $doctrine->getManager();
+        $MatchTimeline = $entityManager->getRepository(MatchTimeline::class)->findOneBy(array('idMatch' => $matchId));
+        if (!$MatchTimeline) {
+            $response = $this->Matchs->request(
+                'GET',
+                'https://europe.api.riotgames.com/lol/match/v5/matches/' . $matchId . '/timeline',
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'X-Riot-Token' => $this->getParameter('api.key')
+                    ]
+                ]
+            );
+            $content = $response->toArray();
+            $MatchTimeline = new MatchTimeline();
+            $MatchTimeline->setIdMatch($matchId);
+            $MatchTimeline->setMatchJson($content["info"]);
+            $entityManager->persist($MatchTimeline);
+            $entityManager->flush();
+        }
+        $MatchTimeline = $serializer->serialize($MatchTimeline, 'json');
+        $MatchTimeline = json_decode($MatchTimeline, true);
+        return $this->json($MatchTimeline);
     }
 }

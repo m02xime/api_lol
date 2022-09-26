@@ -103,6 +103,9 @@ class Matchs
     #[ORM\Column(length: 255)]
     private ?string $puuid = null;
 
+    #[ORM\Column(length: 255)]
+    private ?string $gameMode = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -464,6 +467,18 @@ class Matchs
     public function setPuuid(string $puuid): self
     {
         $this->puuid = $puuid;
+
+        return $this;
+    }
+
+    public function getGameMode(): ?string
+    {
+        return $this->gameMode;
+    }
+
+    public function setGameMode(string $gameMode): self
+    {
+        $this->gameMode = $gameMode;
 
         return $this;
     }
