@@ -76,4 +76,18 @@ class ChampionController extends AbstractController
         $champions = json_decode($champions, true);
         return $this->json($champions);
     }
+
+    //route get one champions by idchampion
+    #[Route('/champions/{id}', name: 'app_champion')]
+    public function getChampion(ManagerRegistry $doctrine, $id): JsonResponse
+    {
+        $encoders = array(new JsonEncoder());
+        $normalizers = array(new GetSetMethodNormalizer());
+        $serializer = new Serializer($normalizers, $encoders);
+        $entityManager = $doctrine->getManager();
+        $champions = $entityManager->getRepository(champions::class)->findBy(array('idChamp' => $id));
+        $champions = $serializer->serialize($champions, 'json');
+        $champions = json_decode($champions, true);
+        return $this->json($champions);
+    }
 }
