@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Matchs;
 use App\Entity\MatchTimeline;
 use App\Entity\Account;
+use App\Entity\MatchDetails;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -30,13 +31,13 @@ class MatchController extends AbstractController
         $serializer = new Serializer($normalizers, $encoders);
         $entityManager = $doctrine->getManager();
         $Account = $entityManager->getRepository(Account::class)->findBy(array('puuid' => $puuid));
-        $regions = array("euw1"=>"europe", "eun1"=>"europe", "na1"=>"americas", "br1"=>"americas", "la1"=>"americas", "la2"=>"americas", "oc1"=>"sea", "ru"=>"asia", "tr1"=>"europe", "jp1"=>"asia", "kr"=>"asia");
+        $regions = array("euw1" => "europe", "eun1" => "europe", "na1" => "americas", "br1" => "americas", "la1" => "americas", "la2" => "americas", "oc1" => "sea", "ru" => "asia", "tr1" => "europe", "jp1" => "asia", "kr" => "asia");
         $region = $regions[$Account[0]->getRegion()];
-        $Matchs = $entityManager->getRepository(Matchs::class)->findBy(array('idMatch' => $id, 'puuid' => $puuid));
+        $Matchs = $entityManager->getRepository(Matchs::class)->findBy(array('MatchId' => $id));
         if (!$Matchs) {
             $response = $this->Matchs->request(
                 'GET',
-                'https://'.$region.'.api.riotgames.com/lol/match/v5/matches/' . $id,
+                'https://' . $region . '.api.riotgames.com/lol/match/v5/matches/' . $id,
                 [
                     'headers' => [
                         'Accept' => 'application/json',
@@ -46,45 +47,12 @@ class MatchController extends AbstractController
             );
             $content = $response->toarray();
 
-            foreach ($content["info"]["participants"] as $partipant) {
-                if ($partipant["puuid"] == $puuid) {
-                    $Matchs = new Matchs();
-                    $Matchs->setPuuid($puuid);
-                    $Matchs->setAssists($partipant['assists']);
-                    $Matchs->setChampLevel($partipant['champLevel']);
-                    $Matchs->setChampionId($partipant['championId']);
-                    $Matchs->setChampionName($partipant['championName']);
-                    $Matchs->setDeaths($partipant['deaths']);
-                    $Matchs->setItem0($partipant['item0']);
-                    $Matchs->setItem1($partipant['item1']);
-                    $Matchs->setItem2($partipant['item2']);
-                    $Matchs->setItem3($partipant['item3']);
-                    $Matchs->setItem4($partipant['item4']);
-                    $Matchs->setItem5($partipant['item5']);
-                    $Matchs->setItem6($partipant['item6']);
-                    $Matchs->setKills($partipant['kills']);
-                    $Matchs->setTotalDamageDealt($partipant['totalDamageDealt']);
-                    $Matchs->setProfileIcon($partipant['profileIcon']);
-                    $Matchs->setSummonerId($partipant['summonerId']);
-                    $Matchs->setSummonerLevel($partipant['summonerLevel']);
-                    $Matchs->setSummonerName($partipant['summonerName']);
-                    $Matchs->setTimePlayed($partipant['timePlayed']);
-                    $Matchs->setWin($partipant['win']);
-                    $Matchs->setGoldEarned($partipant['goldEarned']);
-                    $Matchs->setBaronKills($partipant['baronKills']);
-                    $Matchs->setDragonKills($partipant['dragonKills']);
-                    $Matchs->setSummoner1Id($partipant['summoner1Id']);
-                    $Matchs->setSummoner2Id($partipant['summoner2Id']);
-                    $Matchs->setTotalMinionsKilled($partipant['totalMinionsKilled']);
-                    $Matchs->setTurretLost($partipant['turretsLost']);
-                    $Matchs->setVisionWardsBoughtInGame($partipant['visionWardsBoughtInGame']);
-                    $Matchs->setIdMatch($content['metadata']['matchId']);
-                    $Matchs->setGameMode($content['info']['gameMode']);
-                    $entityManager->persist($Matchs);
-                    $entityManager->flush();
-                    $Matchs = [$Matchs];
-                }
-            }
+
+            $MatchDetails = new MatchDetails();
+            $MatchDetails->setMatchId($id);
+            $MatchDetails->setMatchJson($content["info"]);
+            $entityManager->persist($MatchDetails);
+            $entityManager->flush();
         }
         $Matchs = $serializer->serialize($Matchs, 'json');
         $Matchs = json_decode($Matchs, true);
@@ -100,13 +68,13 @@ class MatchController extends AbstractController
         $serializer = new Serializer($normalizers, $encoders);
         $entityManager = $doctrine->getManager();
         $Account = $entityManager->getRepository(Account::class)->findBy(array('puuid' => $puuid));
-        $regions = array("euw1"=>"europe", "eun1"=>"europe", "na1"=>"americas", "br1"=>"americas", "la1"=>"americas", "la2"=>"americas", "oc1"=>"sea", "ru"=>"asia", "tr1"=>"europe", "jp1"=>"asia", "kr"=>"asia");
+        $regions = array("euw1" => "europe", "eun1" => "europe", "na1" => "americas", "br1" => "americas", "la1" => "americas", "la2" => "americas", "oc1" => "sea", "ru" => "asia", "tr1" => "europe", "jp1" => "asia", "kr" => "asia");
         $region = $regions[$Account[0]->getRegion()];
         $Matchs = $entityManager->getRepository(Matchs::class)->findBy(array('puuid' => $puuid), array('id' => 'ASC'), 20);
         if (!$Matchs || count($Matchs) != 20) {
             $response = $this->Matchs->request(
                 'GET',
-                'https://'.$region.'.api.riotgames.com/lol/match/v5/matches/by-puuid/' . $puuid . '/ids',
+                'https://' . $region . '.api.riotgames.com/lol/match/v5/matches/by-puuid/' . $puuid . '/ids',
                 [
                     'headers' => [
                         'Accept' => 'application/json',
@@ -184,14 +152,14 @@ class MatchController extends AbstractController
         $normalizers = array(new GetSetMethodNormalizer());
         $serializer = new Serializer($normalizers, $encoders);
         $entityManager = $doctrine->getManager();
-        $region = strtolower(strtok($matchId,"_"));
-        $regions = array("euw1"=>"europe", "eun1"=>"europe", "na1"=>"americas", "br1"=>"americas", "la1"=>"americas", "la2"=>"americas", "oc1"=>"sea", "ru"=>"asia", "tr1"=>"europe", "jp1"=>"asia", "kr"=>"asia");
+        $region = strtolower(strtok($matchId, "_"));
+        $regions = array("euw1" => "europe", "eun1" => "europe", "na1" => "americas", "br1" => "americas", "la1" => "americas", "la2" => "americas", "oc1" => "sea", "ru" => "asia", "tr1" => "europe", "jp1" => "asia", "kr" => "asia");
         $region = $regions[$region];
         $MatchTimeline = $entityManager->getRepository(MatchTimeline::class)->findOneBy(array('idMatch' => $matchId));
         if (!$MatchTimeline) {
             $response = $this->Matchs->request(
                 'GET',
-                'https://'.$region.'.api.riotgames.com/lol/match/v5/matches/' . $matchId . '/timeline',
+                'https://' . $region . '.api.riotgames.com/lol/match/v5/matches/' . $matchId . '/timeline',
                 [
                     'headers' => [
                         'Accept' => 'application/json',
