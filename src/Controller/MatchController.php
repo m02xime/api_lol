@@ -29,7 +29,7 @@ class MatchController extends AbstractController
         $normalizers = array(new GetSetMethodNormalizer());
         $serializer = new Serializer($normalizers, $encoders);
         $entityManager = $doctrine->getManager();
-        $Account = $entityManager->getRepository(Matchs::class)->findBy(array('puuid' => $puuid));
+        $Account = $entityManager->getRepository(Account::class)->findBy(array('puuid' => $puuid));
         $regions = array("euw1"=>"europe", "eun1"=>"europe", "na1"=>"americas", "br1"=>"americas", "la1"=>"americas", "la2"=>"americas", "oc1"=>"sea", "ru"=>"asia", "tr1"=>"europe", "jp1"=>"asia", "kr"=>"asia");
         $region = $regions[$Account[0]->getRegion()];
         $Matchs = $entityManager->getRepository(Matchs::class)->findBy(array('idMatch' => $id, 'puuid' => $puuid));
