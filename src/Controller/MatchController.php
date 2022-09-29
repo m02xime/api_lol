@@ -33,8 +33,8 @@ class MatchController extends AbstractController
         $Account = $entityManager->getRepository(Account::class)->findBy(array('puuid' => $puuid));
         $regions = array("euw1" => "europe", "eun1" => "europe", "na1" => "americas", "br1" => "americas", "la1" => "americas", "la2" => "americas", "oc1" => "sea", "ru" => "asia", "tr1" => "europe", "jp1" => "asia", "kr" => "asia");
         $region = $regions[$Account[0]->getRegion()];
-        $Matchs = $entityManager->getRepository(Matchs::class)->findBy(array('MatchId' => $id));
-        if (!$Matchs) {
+        $MatchDetails = $entityManager->getRepository(MatchDetails::class)->findBy(array('MatchId' => $id));
+        if (!$MatchDetails) {
             $response = $this->Matchs->request(
                 'GET',
                 'https://' . $region . '.api.riotgames.com/lol/match/v5/matches/' . $id,
@@ -54,9 +54,9 @@ class MatchController extends AbstractController
             $entityManager->persist($MatchDetails);
             $entityManager->flush();
         }
-        $Matchs = $serializer->serialize($Matchs, 'json');
-        $Matchs = json_decode($Matchs, true);
-        return $this->json($Matchs);
+        $MatchDetails = $serializer->serialize($MatchDetails, 'json');
+        $MatchDetails = json_decode($MatchDetails, true);
+        return $this->json($MatchDetails);
     }
 
     //route 20 dernier matchs par puuid

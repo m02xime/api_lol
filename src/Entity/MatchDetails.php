@@ -13,8 +13,8 @@ class MatchDetails
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column]
-    private ?int $MatchId = null;
+    #[ORM\Column(length: 255)]
+    private ?string $MatchId = null;
 
     #[ORM\Column]
     private array $MatchJson = [];
@@ -24,12 +24,12 @@ class MatchDetails
         return $this->id;
     }
 
-    public function getMatchId(): ?int
+    public function getMatchId(): ?string
     {
         return $this->MatchId;
     }
 
-    public function setMatchId(int $MatchId): self
+    public function setMatchId(string $MatchId): self
     {
         $this->MatchId = $MatchId;
 
