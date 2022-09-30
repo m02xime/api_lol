@@ -63,6 +63,7 @@ class MatchController extends AbstractController
     #[Route('/matchs/{puuid}', name: 'app_matchs')]
     public function matchs(ManagerRegistry $doctrine, string $puuid): JsonResponse
     {
+        $array=array();
         $encoders = array(new JsonEncoder());
         $normalizers = array(new GetSetMethodNormalizer());
         $serializer = new Serializer($normalizers, $encoders);
@@ -86,7 +87,7 @@ class MatchController extends AbstractController
             foreach ($content as $id) {
                 $response = $this->Matchs->request(
                     'GET',
-                    'https://europe.api.riotgames.com/lol/match/v5/matches/' . $id,
+                    'https://' . $region . '.api.riotgames.com/lol/match/v5/matches/' . $id,
                     [
                         'headers' => [
                             'Accept' => 'application/json',
@@ -137,7 +138,7 @@ class MatchController extends AbstractController
                     }
                 }
             }
-            return $this->json($array);
+            return $this->json($Matchs);
         }
         $Matchs = $serializer->serialize($Matchs, 'json');
         $Matchs = json_decode($Matchs, true);
