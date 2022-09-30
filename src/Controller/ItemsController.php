@@ -76,4 +76,18 @@ class ItemsController extends AbstractController
         $items = json_decode($items, true);
         return $this->json($items);
     }
+
+    //get one item from database
+    #[Route('/items/{id}', name: 'app_item')]
+    public function getItem(ManagerRegistry $doctrine, $id): JsonResponse
+    {
+        $encoders = array(new JsonEncoder());
+        $normalizers = array(new GetSetMethodNormalizer());
+        $serializer = new Serializer($normalizers, $encoders);
+        $entityManager = $doctrine->getManager();
+        $items = $entityManager->getRepository(items::class)->findBy(array('itemID' => $id));
+        $items = $serializer->serialize($items, 'json');
+        $items = json_decode($items, true);
+        return $this->json($items);
+    }
 }
